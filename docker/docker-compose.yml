@@ -1,0 +1,14 @@
+version: '3'
+services:
+  neo4jdev:
+    container_name: n4j
+    image: neo4j:3.4.9
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - ./database:/data/databases
+      - ./plugins:/plugins
+    environment:
+      NEO4J_AUTH: "none"
+

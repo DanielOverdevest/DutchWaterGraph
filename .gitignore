@@ -1,0 +1,7 @@
+output/*
+!output/placeholder
+docker/database/graph.db
+vaarweginfo.pkl
+.DS_Store
+warnings.log
+__pycache__/
