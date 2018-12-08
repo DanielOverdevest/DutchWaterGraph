@@ -40,6 +40,7 @@ class dutchwatergraph(object):
         self.createLock(data.lock)
         self.chainFairway()
         self.chainBridges()
+        self.spatialTree()
         return self
         
     def createRoute(self, nodeList):
@@ -61,7 +62,7 @@ class dutchwatergraph(object):
                             a.ForeignCode = nl.ForeignCode,
                             a.GeoGeneration = nl.GeoGeneration,
                             a.GeoType = nl.GeoType,
-                            a.Geometry = nl.Geometry,
+                            a.geometry = nl.Geometry,
                             a.Id = nl.Id,
                             a.Name = nl.Name,
                             a.RouteKmBegin = nl.RouteKmBegin,
@@ -91,7 +92,7 @@ class dutchwatergraph(object):
                             a.ForeignCode = nl.ForeignCode,
                             a.GeoGeneration = nl.GeoGeneration,
                             a.GeoType = nl.GeoType,
-                            a.Geometry = nl.Geometry,
+                            a.geometry = nl.Geometry,
                             a.Id = nl.Id,
                             a.Name = nl.Name,
                             a.RouteId = nl.RouteId,
@@ -126,7 +127,7 @@ class dutchwatergraph(object):
                             a.Function = nl.Function,
                             a.GeoGeneration = nl.Geogeneration,
                             a.GeoType = nl.GeoType,
-                            a.Geometry = nl.Geometry,
+                            a.geometry = nl.Geometry,
                             a.Hectometer = nl.Hectometer,
                             a.Id = nl.Id,
                             a.Name = nl.Name,
@@ -161,7 +162,7 @@ class dutchwatergraph(object):
                             a.ForeignCode = nl.ForeignCode,
                             a.GeoGeneration = nl.GeoGeneration,
                             a.GeoType = nl.GeoType,
-                            a.Geometry = nl.Geometry,
+                            a.geometry = nl.Geometry,
                             a.HasOpeningOnOtherFairway = nl.HasOpeningsOnOtherFairway,
                             a.Id = nl.Id,
                             a.IsRemoteControlled = nl.IsRemoteControlled,
@@ -217,7 +218,7 @@ class dutchwatergraph(object):
                             a.ForeignCode = nl.ForeignCode,
                             a.GeoGeneration = nl.GeoGeneration,
                             a.GeoType = nl.GeoType,
-                            a.Geometry = nl.Geometry,
+                            a.geometry = nl.Geometry,
                             a.Id = nl.Id,
                             a.IsRemoteControlled = nl.IsRemoteControlled,
                             a.IsrsId = nl.IsrsId,
@@ -267,9 +268,28 @@ class dutchwatergraph(object):
                         WITH b, min(bo.RouteKmBegin) as nextBridge
                         MATCH (b)-[:LINKED_TO]->(:Route)<-[:LINKED_TO]-(bo)
                         WHERE bo.RouteKmBegin = nextBridge and (bo:Bridge or bo:Lock)
-                        MERGE (b)-[:NEXT]->(bo)
+                        MERGE (b)-[n:NEXT]->(bo)
                         SET n.km = bo.RouteKmBegin - b.RouteKmBegin
                         """)
         return self
+
+    def spatialTree(self):
+        queries = ["CALL spatial.addLayer('dwg', 'wkt', '');" ,
+                   """
+                    MATCH (n:Fairway)
+                    CALL spatial.addNode('dwg',n) YIELD node
+                    RETURN "";
+                    """,
+                    "CALL spatial.addLayer('dwg-route', 'wkt', '');" ,
+                   """
+                    MATCH (n:Route)
+                    CALL spatial.addNode('dwg-route',n) YIELD node
+                    RETURN "";
+                    """]
+        for query in queries:
+            with self._driver.session() as session:
+                session.run(query)
+        return self
+
 
         
